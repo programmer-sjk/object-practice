@@ -10,4 +10,24 @@ export class Movie {
   private movieType: MovieType;
   private discountAmount: number;
   private discountPercent: number;
+
+  public getMovieType() {
+    return this.movieType;
+  }
+
+  public getFee() {
+    return this.fee;
+  }
+
+  public getDiscountAmount() {
+    return this.discountAmount;
+  }
+
+  public getDiscountPercent() {
+    return this.discountPercent;
+  }
+
+  public getDiscountConditions() {
+    return this.discountConditions;
+  }
 }

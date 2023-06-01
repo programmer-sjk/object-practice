@@ -10,4 +10,24 @@ export class DiscountCondition {
   private endTime: Date; // 종료 시간
 
   // getter / setter
+
+  public getType() {
+    return this.type;
+  }
+
+  public getDayOfWeek() {
+    return this.dayOfWeek;
+  }
+
+  public getStartTime() {
+    return this.startTime;
+  }
+
+  public getEndTime() {
+    return this.endTime;
+  }
+
+  public getSequence() {
+    return this.sequence;
+  }
 }
