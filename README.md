@@ -247,3 +247,56 @@
 - 단일 책임 원칙 (Single Responsibility Principle, SRP)
   - 로버트 마틴은 모듈의 응집도가 변경과 관련있다는 사실을 강조하기 위해 단일 책임 원칙이라는 설계 방법을 제시했다.
   - 단일책임 원칙을 요약하면 클래스는 단 한가지의 변경 이유만 가져야 한다는 것이다.
+
+### 4.4 자율적인 객체를 향해
+
+- 캡슐화를 지켜라
+  - 캡슐화는 설계의 제 1원리다. 객체는 자신이 어떤 데이터를 가지고 있는지 내부에 캡슐화하고 외부에 공개해선 안된다.
+  - 객체는 스스로의 상태를 책임져야 하며 외부에는 인터페이스에 정의된 메서드를 통해서만 상태에 접근할 수 있어야 한다.
+    - 여기서 말하는 메서드는 단순히 접근자, 수정자가 아닌 객체에게 의미있고 책임져야 하는 무언가를 수행하는 메서드다.
+    - 데이터(속성)를 private로 설정했다고 해도 접근자와 수정자를 통해 속성을 외부로 제공하고 있다면 캡슐화를 위반한 것이다.
+  - 이해를 돕기위해 사각형을 표현하는 Rectangle 클래스와 다른 곳에서 사각형의 너비와 높이를 증가시키는 코드가 있다고 가정하자.
+
+  ```js
+    class Rectangle {
+      private left: number;
+      private right: number;
+      private top: number;
+      private bottom: number;
+
+      constructor(left: number, right: number, top: number, bottom: number) {
+        this.left = left;
+        this.right = right;
+        this.top = top;
+        this.bottom = bottom;
+      }
+
+      // 4개의 필드에 대한 getter / setter
+    }
+
+    class anyClass {
+      public anyMethod(rectangle: Rectangle, multiple: number) {
+        rectangle.setRight(rectangle.getRight() * multiple);
+        rectangle.setBottom(rectangle.getBottom() * multiple);
+      }
+    }
+  ```
+
+  - 위 코드에는 문제점들이 있는데 첫번째로 코드 중복이 발생할 확률이 높다.
+    - 다른 곳에서도 높이와 너비를 증가시킨다면 그곳에서도 getRight, getBottom 메서드를 호출하는 코드가 존재한다.
+    - 코드 중복은 악의 근원으로 코드 중복을 초래하는 모든 원인을 제거하는 것이 중요하다.
+  - 두 번째로 변경에 취약하다는 점이다.
+    - right, bottom 대신 length, height을 이용해 사각형을 표현하도록 수정하면 Rectangle 내부의 getter/setter 뿐 아니라 이를 호출하는 모든 클라이언트 코드도 수정해야 한다.
+  - 해결 방법은 캡슐화를 강화해서 Rectangle 내부에 너비와 높이를 조절하는 로직으로 캡슐화하면 문제를 해결할 수 있다.
+
+  ```js
+  class Rectangle {
+    public void enlarge(multiple: number) {
+      right *= multiple;
+      bottom *= multiple;
+    }
+  }
+  ```
+
+- 스스로 자신의 데이터를 책임지는 객체
+  - 객체는 단순한 데이터 제공자가 아니고, 객체 내부에 저장되는 데이터보다 객체가 협력에 참여하면서 수행할 책임을 정의하는 오퍼레이션이 더 중요하다.
