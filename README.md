@@ -414,3 +414,132 @@
   - 메서드: 메시지에 응답하기 위해 실제 실행되는 함수
   - 퍼블릭 인터페이스: 객체가 외부에 제공하는 오퍼레이션 묶음
   - 시그니처: 이름과 인자를 포함하는 오퍼레이션 or 메서드의 명세
+
+### 6.2 인터페이스와 설계 품질
+
+- 추상적인 인터페이스는 어떻게 수행하는지가 아니라 무엇을 하는지를 표현한다.
+- 좋은 인터페이스를 설계하기 위해 책임주도 설계 방법을 따르자.
+  - 책임 주도 설계에서는 메시지를 먼저 선택함으로써 협력에 필요한 오퍼레이션만 인터페이스에 속하게 된다.
+- 퍼블릭 인터페이스의 품질에 영향을 미치는 원칙과 기법을 살펴보자.
+  - 디미터 법칙 (Law of Demeter)
+    - 객체 A가 다른 객체의 내부 구조에 강하게 결합되지 않도록 협력 경로를 제한하자.
+    - 낯선 자에게 말하지 말라, 오직 인접한 이웃하고만 말하라, 오직 하나의 도트(.)만 사용하라로 요약된다.
+    - 디미터 법칙을 따르면 코드단에서 객체 A가 메시지를 전송할 수 있는 경우는 아래 2가지 경우에 해당한다.
+      - 메서드의 인자를 통해 전달된 객체
+      - 객체 A가 가지고 있는 인스턴스 객체
+
+      ```java
+        public class ReservationAgency {
+          public Reservation reserve(Screening screening) {
+            Money fee = screening.calculateFee();
+            // Reservation 반환하는 코드
+          }
+        }
+      ```
+
+    - 디미터 법칙을 따르면 부끄럼타는 코드(shy code)를 작성할 수 있다.
+      - 다른 객체에게 불필요한 그 어떤것도 보여주지 않으며, 다른 객체의 구현에 의존하지 않는 코드
+    - 디미터 법칙을 따르는 코드는 메시지 전송자/수신자 사이의 낮은 결합도를 유지할 수 있다.
+    - 디미터 법칙과 캡슐화
+      - 디미터 법칙은 캡슐화를 제공하기 위한 구체적인 지침을 제공한다.
+    - 다음은 디미터 법칙을 위반하는 전형적인 코드이며, 기차 충돌(train wreck)이라고도 부른다.
+      - `screening.getMovie().getDiscountCondition()`
+    - 무조건 디미터 법칙을 수용하면 객체의 응집도가 낮아질 수 있다. (추후 나옴)
+    - 디미터 법칙은 객체의 내부 구조를 묻는 메시지가 아니라, 수신자에게 무엇을 시키는 메시지가 더 좋다고 속삭인다.
+- 묻지말고 시켜라
+  - bad
+
+  ```ts
+  export class ReservationAgency {
+  public reserve(
+    screening: Screening,
+    customer: Customer,
+    audienceCount: number,
+  ) {
+    const movie = screening.getMovie();
+    let discountable = false;
+    for (const condition of movie.getDiscountConditions()) {
+      if (condition.getType() == DiscountConditionType.PERIOD) {
+        discountable =
+          screening.getWhenScreened().getDay() == condition.getDayOfWeek() &&
+          condition.getStartTime() <= screening.getWhenScreened() &&
+          condition.getEndTime() >= screening.getWhenScreened();
+      } else {
+  ```
+
+  - good
+
+  ```java
+    public class ReservationAgency {
+      public Reservation reserve(Screening screening) {
+        Money fee = screening.calculateFee();
+        // Reservation 반환하는 코드
+      }
+    }
+  ```
+
+  - 디미터 법칙은 훌륭한 메시지는 객체에게 묻지말고 시키라는 것을 장려한다.
+  - 묻지말고 시켜라(Tell. Don't Ask)는 이런 스타일의 메시지 작성을 장려하는 원칙이다.
+  - 디미터 법칙과 묻지말고 시켜라 원칙은 우리에게 힌트를 제공한다.
+    - 내부의 상태를 묻는 오퍼레이션이 인터페이스에 포함되어 있다면 더 나은 방법은 없는지 고민해보자.
+    - 내부의 상태를 이용해 결정을 내리는 로직이 객체 외부에 존재하면, 객체가 책임질 어떤 행동이 외부로 누수된 것이다.
+  - 좋은 인터페이스를 얻기 위해 어떻게 작업을 수행하는지를 노출해선 안 된다.
+    - 인터페이스는 객체가 어떻게 하는지가 아니라 무엇을 하는지 서술해야 한다.
+- 의도를 드러내는 인터페이스
+
+  ```java
+    public class PeriodCondition {
+      public boolean isSatisfiedByPeriod() {}
+    }
+
+    public class SequenceCondition {
+      public boolean isSatisfiedBySequence() {}
+    }
+  ```
+
+  - 위와 같은 코드는 2가지 문제가 있다.
+    - 클라이언트 관점에서 동일하게 할인 조건을 판단하는데, 메서드의 이름이 다르기에 클라이언트가 내부 구현을 이해하고 메서드를 선택해야 한다.
+    - 메서드 이름이 변경될 때 클라이언트의 코드도 함께 변경된다.
+  - 무엇을 하는지를 드러내는 메서드 이름은 이해하기 쉽고 유연한 코드를 낳는다.
+    - 어떻게 수행하는지 이름을 드러내면 내부 구현을 설명하는 이름이고
+    - 무엇을 하는지를 드러내면 객체가 수행해야 하는 책임에 대해 고민하게 된다.
+
+  ```java
+    public class PeriodCondition {
+      public boolean isSatisfiedBy() {}
+    }
+
+    public class SequenceCondition {
+      public boolean isSatisfiedBy() {}
+    }
+  ```
+
+  - 위 코드는 메서드의 이름을 통해 `PeriodCondition, SequenceCondition`가 동일한 목적을 가진다는 것을 표현한다.
+  - 클라이언트 관점에서 동일한 메시지를 전달하기에 수신측의 내부 구현을 알 필요가 없어진다.
+  - 객체에게 묻지말고 시키되, 구현 방법이 아닌 클라이언트의 의도를 드러내야 한다.
+    - 우테캠 LottoMarket의 sell or buy를 고민했던 경험
+  - 켄트 백은 Smalltalk Best Practice Patterns 책에서 의도를 드러내는 선택자라고 표현했는데, 도메인 주도 설계에서 에릭 에반스는 켄트백의 표현을 인터페이스 레벨로 확장해선택 의도를 드러내는 인터페이스를 제시했다.
+
+- 함께 모으기
+  - 아래의 나쁜 예시를 보여주고 묻지말고 시켜라, 인터페이스에 의도를 드러내자 원칙을 적용시키는데 다들 보셨을 거라 믿는다.
+
+  ```ts
+  export class Theater {
+    private ticketSeller: TickerSeller;
+    constructor(ticketSeller: TickerSeller) {
+      this.ticketSeller = ticketSeller;
+    }
+
+    enter(audience: Audience) {
+      if (audience.getBag().hasInvitation()) {
+        const ticket = this.ticketSeller.getTicketOffice().getTicket();
+        audience.getBag().setTicket(ticket);
+      } else {
+        const ticket = this.ticketSeller.getTicketOffice().getTicket();
+        audience.getBag().minusAmount(ticket.getFee());
+        this.ticketSeller.getTicketOffice().plusAmount(ticket.getFee());
+        audience.getBag().setTicket(ticket);
+      }
+    }
+  }
+  ```
