@@ -464,7 +464,7 @@
           screening.getWhenScreened().getDay() == condition.getDayOfWeek() &&
           condition.getStartTime() <= screening.getWhenScreened() &&
           condition.getEndTime() >= screening.getWhenScreened();
-      } else {
+      } else { ... }
   ```
 
   - good
@@ -543,3 +543,54 @@
     }
   }
   ```
+
+### 6.3 원칙의 함정
+
+- SW 설계에서 절대적인 법칙은 없다.
+- 원칙이 현재 상황에 부적합하다고 생각되면 과감하게 원칙을 무시해라. 원칙을 아는 것보다 더 중요한 것은
+언제 원칙이 유용하고 언제 유용하지 않은지 판단할 수 있는 능력을 기르는 것이다.
+
+---
+
+- 디미터 법칙은 하나의 도트를 강제하는 규칙이 아니다.
+  - 디미터 법칙은 결합도와 관련된 것이며, 객체의 내부 구조가 외부로 유출되는 경우에 한정한다.
+  - `IntStream.of(1, 15, 20).filter(x -> x > 10).distinct().count()`
+  - 위에서 Instream의 함수들은 다른 IntStream으로 변환할 뿐 캡슐화는 그대로 유지된다.
+- 결합도와 응집도의 충돌
+  - 묻지말고 시켜라와 디미터 법칙을 준수하는게 항상 좋은 건 아니다.
+
+  ```java
+    // step1
+    public class PeriodCondition implements DiscoundCondition {
+      public boolean isSatisfiedBy(Screening screening) {
+        return screening.getStartTime().getDayOfWeek().equals(dayOfWeek) &&
+          startTime.compareTo(screening.getStartTime().toLocalTime()) <= 0 &&
+          endTime.compareTo(screening.getStartTime().toLocalTime()) >= 0;
+      }
+    }
+
+    // step2
+    public class Screening {
+      public boolean isDiscountable(
+        DayOfWeek dayOfWeek,
+        LocalTime startTime,
+        LocalTime endTime
+      ) {
+        // 할인이 가능한지 로직이 존재
+      }
+    }
+
+    public class PeriodCondition implements DiscoundCondition {
+      public boolean isSatisfiedBy(Screening screening) {
+        return screening.isDiscountable(dayOfWeek, startTime, endTime);
+      }
+    }
+  ```
+
+  - 위 코드를 보면 묻지말고 시켜라를 준수하는 퍼블릭 인터페이스를 얻을 수 있었다.
+  - 하지만 아래와 같은 단점이 있다.
+    - Screening이 할인 조건을 판단하는 책임을 떠안게 된다.
+    - Screening이 PeriodCondition의 변수를 인자로 받기 때문에 둘 간의 결합도를 높인다.
+  - 이 상태에서 Screening이 캡슐화 향상보다는 Screening의 응집도를 높이고 Screening <-> PeriodCondition 간 결합도를 낮추는 것이 전체적으로 좋은 방법이다.
+  - 협력을 위해 객체에게 시키는 것이 항상 가능한 것은 아니다. 가끔은 물어야 한다.
+  - SW 설계에 법칙은 존재하지 않는다. 원칙을 맹신하지 마라. 원칙이 적절한 상황과 부적절한 상황을 판단할 수 있는 안목을 길러라. 설계는 트레이트오프의 산물이다. SW 설계에 존재하는 몇 없는 법칙 중 하나는 경우에 따르 다르다. 라는 사실을 명심하자.
