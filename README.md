@@ -812,12 +812,63 @@
   ```js
   public class Movie {
     private DiscountPolicy discountPolicy;
-      public Movie(title: string) {
-        this.discountPolicy = new AmountDiscountPolicy();
-      }
+    public Movie(title: string) {
+      this.discountPolicy = new AmountDiscountPolicy();
     }
+  }
   ```
 
   - 생성자, setter, 메서드 인자를 사용하는 경우 의존성이 public 인터페이스에 드러나게 되는데 이를 명시적인 의존성이라고 부른다.
   - 의존성이 명시적이지 않으면 의존성을 파악하기 위해 내부 구현을 직접 살펴볼 수 밖에 없고, 변경이 발생할 때 내부 구현을 직접 변경해야 할 수 있다. 코드 수정은 언제나 잠재적으로 버그의 발생 가능성을 내포한다.
   - 의존성은 명시적으로 표현돼야 한다. 의존성을 내부 구현에 숨겨두지 마라. 유연하고 재사용 가능한 설계란 퍼블릭 인터페이스를 통해 의존성이 명시적으로 드러나는 설계다. 숨겨져 있는 의존성을 밝은 곳으로 드러내서 널리 알려라. 그러면 설계가 유연하고 재사용 가능해 질 것이다.
+- new는 해롭다.
+  - 클라이언트에서 new 연산자를 사용하면 구체 클래스의 이름과, 어떤 인자를 이용해 클래스의 생성자를 호출해야 하는지 알아야 하기 때문에 결합도가 높아진다.
+
+  ```js
+    public class Movie {
+      private discountPolicy: DiscountPolicy;
+      public Movie(title: String, fee: Money) {
+        this.discountPolicy = new AmountDiscountPolicy(
+          Money.wons(800),
+          new SequenceCondition(1),
+          new SequenceCondition(10),
+          new PeriodCondtion(DayofWeek.MONDAY, LocalTime.of(10, 0)),
+          new PeriodCondtion(DayofWeek.FRIDAY, LocalTime.of(20, 59)),
+        )
+      }
+    }
+  ```
+
+  - 위 코드에서 Movie는 AmountDiscountPolicy와 결합도가 높다. 결합도가 높으면 변경에 의해 영향을 받기도 쉬워진다. AmountDiscountPolicy의 생성자 인자 목록이나 순서가 바뀌면 필시 Movie도 수정을 해야 한다. 이게 높은 결합도를 피해야 하는 이유다.
+  - 해결 방법은 인스턴스를 생성하는 로직과 사용하는 로직을 분리하는 것이다. Movie가 인스턴스를 생성하지 말고 위에서 많이 봐왔던 예시처럼 생성자를 통해 DiscountPolicy로 전달받아 사용하기만 해야 한다.
+- 사용과 생성의 책임을 분리하고, 의존성을 생성자에 명시적으로 드러내고, 구체 클래스가 아닌 추상 클래스에 의존하게 함으로써 설계를 유연하게 만들 수 있다.
+- 가끔은 생성해도 무방하다.
+  - 클래스 안에서 객체를 직접 생성하는 게 유용한 경우도 있다. 예를 들어 Movie가 대부분 AmountDiscountPolicy의 인스턴스와 협력하고 가끔씩만 PercentDiscountPolicy 인스턴스와 협력한다고 가정해보자. 이 상황에서 인스턴스 생성 책임을 클라이언트로 옮긴다면 클라이언트들 사이에 중복 코드가 늘어나고 Movie 사용성도 나빠질 것이다.
+  - 이 문제를 해결하는 방법은 기본 객체를 생성하는 생성자를 추가하고, 체이닝 하는 것이다.
+
+  ```js
+    public class Movie {
+      private DiscountPolicy discountPolicy;
+      public Movie(title: string) {
+        this(title, new AmountDiscountPolicy(...))
+      }
+
+      public Movie(title: string, discountPolicy: DiscountPolicy) {
+        this.discountPolicy = new discountPolicy();
+      }
+    }
+  ```
+
+  - 여기서 첫번째 생성자가 두번째 생성자를 호출한다. 즉 생성자가 체인처럼 연결된다. 이제 클라이언트는 대부분 AmountDiscountPolicy의 인스턴스와 협력하게 하면서도 가끔씩 DiscountPolicy의 인스턴스로 의존성을 교체할 수 있다.
+  - 위 예는 설계가 트레이드 오프 활동이라는 사실을 다시 한번 상기시킨다. 구체클래스에 의존하게 되더라도 클래스의 사용성이 더 중요하다면 결합도를 높이는 방향으로 코드를 작성할 수 있다.
+- 표준 클래스에 대한 의존은 해롭지 않다.
+  - 의존성이 불편한 이유는 그것이 항상 변경에 대한 영향을 암시하기 때문이다. 따라서 변경될 확률이 거의 없는 클래스라면 의존성이 문제가 되지 않는다.
+  - 예를 들어 자바 라이브러리의 ArrayList의 경우 다음과 같이 직접 생성해서 대입하는 것이 일반적이다.
+
+    ```java
+      public abstract class DiscountPolicy {
+        private List<DiscountCondition> conditions = new ArrayList();
+      }
+    ```
+
+  - 비록 클래스를 직접 생성하더라도 가능한 추상적인 타입을 사용하는게 확장성 측면에서 좋다. 위 코드에서 List를 사용한 것은 이 때문이다. 이렇게 하면 다양한 List 타입의 객체로 conditions를 대체할 수 있게 설계의 유연성을 높일 수 있다.
