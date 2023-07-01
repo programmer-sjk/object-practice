@@ -735,3 +735,62 @@
 - 협력이 중요하다.
   - 위에서 설명한 추상 데이터 타입과 클래스는 차이를 보여주기 위해 설명한 것이지, 객체를 설계하는 방법을 설명한 것은 아니다. 객체를 설계하는 방법은 책임 주도 설계의 흐름을 따른다는 점을 기억해라.
   - 객체가 참여할 협력을 결정하고, 협력에 필요한 책음을 수행하기 위해 어떤 객체가 필요한지에 관해 고민해라. 그 책임을 다양한 방식으로 수행해야 할 때만 타입 계층안에 각 절차를 추상화해라.
+
+## 8. 의존성 관리하기
+
+- 협력은 필수적이지만 과도한 협력은 설계를 곤경에 빠트릴 수 있다. 협력은 객체가 다른 객체에 대해 알 것을 강요한다. 객체지향 설계의 핵심은 협력을 위해 필요한 의존성을 유지하면서도 변경을 방해하는 의존성은 제거하는데 있다.
+
+### 8.1 의존성 이해하기
+
+- 어떤 객체가 협력하기 위해 다른 객체를 필요로 할 때 두 객체 사이의 의존성이 존재하게 된다.
+- 의존성은 방향성을 가지며 항상 단방향이다. 아래 코드에서 Screening이 변경될 때 PeriodCondition이 영향을 받게 되지만 그 역은 성립하지 않는다.
+
+```java
+    public class PeriodCondition implements DiscoundCondition {
+      public boolean isSatisfiedBy(Screening screening) {
+        return screening.getStartTime().getDayOfWeek().equals(dayOfWeek) &&
+          startTime.compareTo(screening.getStartTime().toLocalTime()) <= 0 &&
+          endTime.compareTo(screening.getStartTime().toLocalTime()) >= 0;
+      }
+    }
+```
+
+- 의존성은 전이될 수 있다. PeriodCondition이 Screening에 의존할 경우 PeriodCondition은 Screening이 의존하는 대상에 대해서도 자동적으로 의존하게 된다는 것이다. 다시 말해 Screening이 가지고 있는 의존성이 PeriodCondition으로도 전파된다는 것이다.
+- 아래에서 Movie 클래스는 할인 정책을 구현한 두 클래스를 모르지만 실행시점의 Movie 객체는 두 클래스의 인스턴스와 협력할 수 있다. 이것이 핵심이다. 유연하고 재사용 가능한 설계를 만들기 위해, 동일한 소스코드 구조를 가지고 다양한 실행 구조를 만들수 있어야 한다.
+![의존성](images/Movie의존성.png)
+- 의존성 해결
+  - 컴파일 타임 의존성은 구체적인 런타임 의존성으로 대체돼야 한다. 위에서 Movie 클래스는 DiscountPolicy 클래스에 의존하는데 이는 컴파일타임 의존성이다. 실행 시점에 Movie는 AmountDiscountPolicy 또는 PercentDiscountPolicy 인스턴스에 의존하는데 이는 런타임 의존성이다.
+  - 이처럼 컴파일 타임 의존성을 적절한 런타임 의존성으로 교체하는 것을 의존성 해결이라 부른다. 의존성을 해결하기 위해 일반적으로 아래와 같은 세가지 방법을 사용한다.
+    - 객체를 생성하는 시점에 생성자를 통해 의존성 해결
+    - 객체 생성후 setter 메소드를 통해 의존성 해결
+    - 메서드 실행 시 인자를 이용해 의존성 해결
+  - 영화 요금 계산에 금액 할인 정책을 적용하고 싶다면 Movie 객체를 생성할 때 AmountDiscountPolicy를 생성자에 전달하면 된다.
+
+  ```js
+    // 금액 할인 정책
+    Movie avatar = new Movie("아바타", new AmountDiscountPolicy(...))
+
+    // 퍼센트 할인 정책
+    Movie avatar = new Movie("아바타", new PercentDiscountPolicy(...))
+
+    // Movie 클래스는 선택적으로 받을 수 있게 DiscountPolicy 타입의 인자를 받는다.
+    public class Movie {
+      public Movie(title: string, discountPolicy: DiscountPolicy) {
+        this.discountPolicy = discountPolicy;
+      }
+    }
+  ```
+
+  - setter 메소드를 이용해 의존하는 대상을 변경할 수 있는데, 객체를 생성한 이후에 의존하고 있는 대상을 변경하고 싶다면 유용하다. 이때 객체를 생성하고 의존성을 설정하기 전까지 객체의 상태가 불완전할 수 있다. 따라서 생성자 방식과 setter 방식을 혼합하는 것이 좋다. 객체 생성시 항상 의존성을 넣어 완전한 상태의 객체를 생성한 후, 필요에 따라 setter 메소드를 이용해 의존 대상을 변경할 수 있다.
+  - Movie가 항상 할인 정책을 알필요는 없고 가격을 계산할 때만 일시적으로 알아도 무방하다면 메서드의 인자를 이용해 의존성을 해결할 수도 있다.
+
+  ```js
+    public class Movie {
+      public calculateMovieFee(
+        screening: Screening,
+        discountPolicy: DiscountPolicy
+      ) {}
+    }
+  ```
+
+  - 메서드 인자를 사용하는 방식은 협력 대상에 대해 지속적으로 의존관계를 맺을 필요 없이 메서드가 실행되는 동안만 일시적으로 의존 관계가 존재해도 무방하거나, 메서드가 실행될 때마다 의존 대상이 매번 달라져야 하는 경우 유용하다.
