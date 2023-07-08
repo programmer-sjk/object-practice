@@ -908,3 +908,36 @@
     ```
 
     - 위 코드에서 변하지 않는 부분은 할인여부를 판단하는 `isSatisfied`이고 변하는 부분은 할인된 요금을 계산하는 방법 `getDiscountAmount`이다. 여기서 변하는 부분을 고정하고 변하지 않는 부분을 생략하는 추상화가 OCP 원칙의 기반이 된다는 사실에 주목하자.
+
+### 9.2 생성 사용 분리
+
+```js
+  public class Movie {
+    private DiscountPolicy discountPolicy;
+    public Movie(title: string) {
+      this.discountPolicy = new AmountDiscountPolicy();
+    }
+
+    public calculateMovieFree(screening: Screening) {
+      return fee.minus(discountPolicy.calculateDiscountAmount(screening));
+    }
+  }
+```
+
+- 위 코드에서 할인 정책을 변경하려면 AmountDiscountPolicy를 생성하는 부분을 직접 수정하는 것 뿐이다. 이것은 동작을 추가/변경 하기 위해 기존의 코드를 수정하므로 OCP 원칙을 위반한다.
+- 동일한 클래스 안에서 객체의 생성과 사용이라는 두 가지 의도를 가진 코드가 문제이다. 유연하고 재사용 가능한 설계를 원한다면 객체를 생성과 사용을 분리해야 한다.
+  - 객체의 사용으로부터 생성을 분리하는 가장 보편적인 방법은, 객체를 생성할 책임을 클라이언트로 옮기는 것이다.
+
+  ```js
+    public class Client {
+      public getAvatarFee() {
+        Movie avatar = new Movie('아바타', new AmountDiscountPolicy(...))
+        return avatar.getFee();
+      }
+    }
+  ```
+
+- 순수한 가공물에게 책임 할당하기
+  - 모든 책임을 도메인 객체에게 할당하면 낮은 응집도, 높은 결합도, 재사용성 저하와 같은 문제에 봉착하게 된다.
+  - 도메인 개념을 표현한 책임이 아니라면, 설계자의 편의를 위해 임의로 만들어낸 가공의 객체에게 책임을 할당해서 문제를 해결할 수 있다.
+  - 크레이크 라만은 이처럼 책임을 할당하기 위해 도메인과 무관한 인공적인 객체를 PURE FABRICATION(순수한 가공물) 이라고 부른다.
