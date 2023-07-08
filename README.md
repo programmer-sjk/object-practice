@@ -872,3 +872,39 @@
     ```
 
   - 비록 클래스를 직접 생성하더라도 가능한 추상적인 타입을 사용하는게 확장성 측면에서 좋다. 위 코드에서 List를 사용한 것은 이 때문이다. 이렇게 하면 다양한 List 타입의 객체로 conditions를 대체할 수 있게 설계의 유연성을 높일 수 있다.
+
+## 9. 유연할 설계
+
+### 9.1 개방-폐쇄 원칙
+
+- 로버트 마틴은 확장 가능하고 변화에 유연한 설계를 위한 원칙 중 하나로 개방-폐쇄 원칙(Open-Closed Principle, OCP)을 고안했다. 개방 폐쇄 원칙을 요약하면 소프트웨어 개체는 확장에 대해 열려있어야 하고, 수정에 대해서는 닫혀 있어야 한다.
+- 여기서 키워드는 확장과 수정이다.
+  - 확장에 대해 열려있다. 요구사항이 변경될 때, 새로운 동작을 추가해 어플리케이션을 확장할 수 있다.
+  - 수정에 대해 닫혀있다. 기존의 코드를 수정하지 않고도 애플리케이션 동작을 추가하거나 변경할 수 있다.
+- 어떻게 코드를 수정하지 않고도 새로운 동작을 추가할 수 있을까?
+  - 컴파일타임 의존성을 고정시키고 런타임 의존성을 변경하라
+    - 사실 OCP는 런타임 의존성과 컴파일타임 의존성에 관한 이야기다.
+    - 앞의 영화 예매 시스템을 상기해보자. 컴파일 타임 의존성 관점에서 Movie 클래스는 추상클래스인 DiscountPolicy에 의존한다. 런타임 의존성 관점에서는 Movie 인스턴스는 AmountDiscountPolicy와 PercentDiscountPolicy 인스턴스에 의존한다. 즉 컴파일과 런타임 의존성이 동일하지 않고 OCP 원칙을 따르고 있다.
+    - 여기서 중복 할인 정책을 추가한다고 가정하면, DiscountPolicy의 자식 클래스로 OverlappedDiscountPolicy 클래스를 추가한 것 뿐이다. 기존의 어떤 코드도 수정하지 않았다. NoneDiscountPolicy도 마찬가지다. 기존 코드를 손대지 않은 채 할인 정책이 적용되지 않은 영화를 구현할 수 있었다.
+  - 추상화가 핵심이다.
+    - OCP의 핵심은 추상화에 의존하는 것이다. 이해를 돕기 위해 아래 코드를 보자.
+    -
+    ```js
+      public abstract class DiscountPolicy {
+        private List<DiscountCondition> conditions = new ArrayList();
+
+        public calculateDiscountAmount(screening: Screening) {
+          for (let each of conditions) {
+            if (each.isSatisfied(screening)) {
+              return getDiscountFee(screening);
+            }
+          }
+
+          return screening.getMovieFee();
+        }
+
+        abstract protected getDiscountAmount(screening: Screening);
+      }
+    ```
+
+    - 위 코드에서 변하지 않는 부분은 할인여부를 판단하는 `isSatisfied`이고 변하는 부분은 할인된 요금을 계산하는 방법 `getDiscountAmount`이다. 여기서 변하는 부분을 고정하고 변하지 않는 부분을 생략하는 추상화가 OCP 원칙의 기반이 된다는 사실에 주목하자.
