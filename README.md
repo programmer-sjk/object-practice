@@ -807,7 +807,7 @@
     - 인터페이스 의존성
   - 실행 컨텍스트에 대해 알아야 하는 정보를 줄일수록 결합도가 낮아진다. 결합도를 느슨하게 만들기 위해서는 구체적인 클래스보다 추상 클래스에, 추상 클래스보다 인터페이스에 의존하도록 만드는 것이 더 효과적이다. 결국 의존하는 대상이 더 추상적일수록 결합도는 낮아진다는 것이다.
 - **명시적인 의존성**
-  - 아래 코드는 생성자 안에서 의존성을 생성하는 방식으로,Movie가 AmountDiscountPolicy에 의존한다는 사실을 감춘다. 이를 숨겨진 의존성이라고 한다.
+  - 아래 코드는 생성자 안에서 의존성을 생성하는 방식으로,Movie가 `AmountDiscountPolicy`에 의존한다는 사실을 감춘다. 이를 **숨겨진 의존성**이라고 한다.
 
   ```js
   public class Movie {
@@ -888,7 +888,7 @@
     - 여기서 중복 할인 정책을 추가한다고 가정하면, DiscountPolicy의 자식 클래스로 OverlappedDiscountPolicy 클래스를 추가한 것 뿐이다. 기존의 어떤 코드도 수정하지 않았다. NoneDiscountPolicy도 마찬가지다. 기존 코드를 손대지 않은 채 할인 정책이 적용되지 않은 영화를 구현할 수 있었다.
   - 추상화가 핵심이다.
     - OCP의 핵심은 추상화에 의존하는 것이다. 이해를 돕기 위해 아래 코드를 보자.
-    -
+
     ```js
       public abstract class DiscountPolicy {
         private List<DiscountCondition> conditions = new ArrayList();
