@@ -1220,3 +1220,43 @@
   - 동적 바인딩
     - 메시지를 수신하는 객체의 타입에 따라 실행되는 메서드가 결정된다. 메서드를 컴파일 시점이 아니라 실행 시점에 결정하기 때문에 가능하다.
     - 컴파일타임에 호출할 함수를 결정하는 방식을 정적 바인딩이라고 부른고, 객체지향 언어에서는 호출함 함수를 런타임에 결정하는데 동적 바인딩 or 지연 바인딩이라 부른다.
+
+### 12.4 동적 메서드 탐색과 다형성
+
+- 객체가 메시지를 수신하면 컴파일러가 self라는 변수를 생성해 메시지를 수신한 객체를 가리키도록 설정한다.
+  - 동적 메서드 탐색은 self가 가리키는 객체의 클래스부터 시작해, 상속 역방향으로 이뤄지며 메서드 탐색이 중료되면 self는 자동으로 소멸된다.
+  - 아래는 메시지를 수신한 시점의 GradeLecture 인스턴스 메모리 상태를 나타낸 것으로, 메서드를 탐색하기 위해 self가 가리키는
+    GradeLecture 클래스부터 상속 관계를 따라 메서드를 탐색한다.
+    - ![self 참조](images/self참조.png)
+  - 다형성에서 실행 될 메서드를 찾기 위해, 자식 클래스부터 상속 계층을 따라 부모의 메소드를 탐색하고, 어떤 메서드를 실행시킬지는 런타임 시점에 이뤄지며, 메서드를 탐색하는 경로는 컴파일러가 임의로 만든 self 참조를 이용해 결정된다.
+- 동적인 문맥
+  - 아래 코드에서 getEvaluation 메서드를 호출한다고 표현했지만, 정확히는 현재 객체에게 getEvaluation 메시지를 전송하는 것이다.
+
+    ```java
+      public class Lecture {
+        public String stats() {
+          return String.format("Evaluation Method: %s", getEvaluation());
+        }
+
+        public String getEvaluation() {
+          return "WTF";
+        }
+      }
+
+      public class GradeLecture extends Lecture {
+        @Override
+        public String getEvaluation() {
+          return "This part needs a lot of images.. WTF";
+        }
+      }
+    ```
+
+  - 여기서 말하는 현재 객체란 무엇일까? 바로 self가 가리키는 객체다.
+    - ![self전송](images/self전송.png)
+    - ![상속self전송](images/상속self전송.png)
+- 이해할 수 없는 메시지
+  - 상속 계층의 정상까지 온 메시지를 처리할 수 없다는 걸 알게 되면 정적 타입 언어는 컴파일 과정에서 에러가 발생하고,
+  동적 타입 언어는 self 참조가 가리키는 현재 객체에게 메시지를 전송한다. 이 메시지는 상속 계층을 올라가 최상위 클래스에서 예외를 던지게 된다.
+- self 대 super
+  - super는 이 클래스의 부모 클래스에서부터 메서드 탐색을 시작하세요 라는 뜻이다.
+  - self가 실행할 메서드를 탐색할 위치를 동적으로 결정하는데 비해 super는 항상 해당 클래스의 부모 클래스에서부터 메서드 탐색을 시작한다. 즉 self는 메서드 탐색을 동적으로 결정해야 하지만 super는 컴파일 시점에 미리 결정해 놓을 수 있다.
