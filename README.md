@@ -1179,3 +1179,44 @@
     ![클래스와 인스턴스의 관계](images/자식부모개념적인관계.png)
     - 아래는 GradeLecture 인스턴스를 생성했을 떄의 메모리 구조다. 이 그림은 개념적인 그림으로 구체적인 구현과 메모리 구조는 언어나 플랫폼에 따라 다르다.
     ![인스턴스의 메모리 구조](images/자식부모_인스턴스_메모리구조.png)
+
+### 12.3 업캐스팅과 동적 바인딩
+
+- 같은 메시지, 다른 메서드
+
+```java
+  public class Professor {
+    private String name;
+    private Lecture lecture;
+
+    public Professor(String name, Lecture lecture) {
+      this.name = name;
+      this.lecture = lecture;
+    }
+
+    public String compileStatistics() {
+      return String.format("%s %s - Avg: %.1f", name, lecture.evaluate(), lecture.average());
+    }
+  }
+
+  Professor professor = new Professor("컴퓨터구조", new Lecture("페이지와 세그먼트", 100, Arrays.asList(40, 50, 60)));
+  Professor professor2 = new Professor("컴퓨터구조", new GradeLecture(
+    "페이지와 세그먼트",
+    100,
+    Arrays.asList(new Garde("A", 100, 95), new Garde("B", 88, 70)),
+    Arrays.asList(40, 50))
+  );
+
+  professor.compileStatistics();  // Lecture의 evaluate 실행
+  professor2.compileStatistics(); // GradeLecture evaluate 실행
+```
+
+- 코드 안에 선언된 타입과 무관하게 실제로 메시지를 수신하는 객체의 타입에 따라 실행되는 메서드가 달라질 수 있는 것은 업캐스팅과 동적 바인딩이라는 메커니즘이 작용하기 때문이다.
+  - 업캐스팅
+    - 부모 타입으로 선언된 변수에 자식의 인스턴스를 할당하는 것이 가능하다.
+    - 컴파일러는 명시적 타입 변환 없이도 자식이 부모 클래스를 대체할 수 있도록 허용한다.
+    - 반대로 부모를 자식 클래스로 변환하기 위해서는 명시적으로 타입 캐스팅이 필요한데 이를 다운캐스팅이라고 부른다.
+      - `GradeLecture gradeLecture = (GradeLecture)lecture`
+  - 동적 바인딩
+    - 메시지를 수신하는 객체의 타입에 따라 실행되는 메서드가 결정된다. 메서드를 컴파일 시점이 아니라 실행 시점에 결정하기 때문에 가능하다.
+    - 컴파일타임에 호출할 함수를 결정하는 방식을 정적 바인딩이라고 부른고, 객체지향 언어에서는 호출함 함수를 런타임에 결정하는데 동적 바인딩 or 지연 바인딩이라 부른다.
