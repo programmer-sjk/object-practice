@@ -1072,6 +1072,7 @@
   ```
 
 - 강제 다형성
+  - 언어가 지원하는 자동적인 타입 변환이나, 동일한 연산자를 다양한 타입에 사용할 수 있는 방식
 
   ```java
     3 + 3 = 6
@@ -1101,3 +1102,80 @@
 
 - 다형성을 구현하는 가장 일반적인 방법은 상속을 사용하는 것. 상속의 진정한 목적은 코드 재사용이 아니라 다형성을 위한 서브타입 계층을 구축하는 것이다.
 - 이번 장의 목표는 포함 다형성의 관점에서 런타임에 상속 계층 안에서 적절한 메서드를 선택하는 방법을 이해하는 것이다.
+
+### 12.2 상속의 양면성
+
+- 상속이 무엇이고 언제 사용하는지를 이해해야 하는데, 상속의 목적은 코드 재사용이 아니다. 상속은 다형성을 가능하게 하는 타입 계층을 구축하는게 목적이다.
+- 상속을 이해하는데 필요한 몇 가지 개념을 살펴보자.
+  - 업캐스팅
+  - 동적 메서드 탐색
+  - 동적 바인딩
+  - self 참조
+  - super 참조
+- 상속을 사용한 강의 평가
+  - 상황
+    - `Pass:3 Fail:2, A:1 B:1 C:1 D:0 F:2` 결과를 출력하는 프로그램을 작성해야 함
+    - `Pass:3 Fail:2` 를 출력하는 Lecture 클래스가 이미 존재. Lecture를 재사용하면 될 듯
+
+  ```java
+    public class Lecture {
+      private int pass;
+      private String title;
+      private List<Integer> scores = new ArrayList<>();
+
+      public Lecture(String title, int pass, List<Integer> scores) {
+        this.title = title;
+        this.pass = pass;
+        this.scores = scores;
+      }
+
+      /** 평균 계산 */
+      public double average() {}
+
+      public List<Integer> getScores() {}
+
+      public String evaluate() {
+        return String.format("Pass:%d Fail:%d", passCount(), failCount());
+      }
+    }
+
+    // 클라이언트 호출 코드
+    Lecture lecture = new Lecture("오브젝트", 99, Arrays.asList(80, 84, 11, 59, 100));
+  ```
+
+  - 상속을 이용해 Lecture 클래스 재사용하기
+    - Lecture 클래스는 새로운 기능을 구현하는데 필요한 데이터와 메서드를 포함하고 있다.
+
+    ```java
+      public class GradeLecture extends Lecture {
+        private List<Grade> grades;
+
+        public GradeLecture(String name, int pass, List<Grade> grades, List<Integer> scores) {
+          super(name, pass, scores);
+          this.grades = grades;
+        }
+
+        @Override
+        public String evaluate() {
+          return super.evaluate() + ", " + gradesStatistics();
+        }
+
+        public double average(String gradeName) {
+          return grades().stream().~~~
+        }
+      }
+    ```
+
+    - 주목할 부분은 GradeLecture, Lecture에 구현된 evaluate 메서드 시그니처가 완전히 동일 하다는 것.
+      - 부모/자식 클래스가 동일한 메서드를 가질 경우, 자식 클래스의 메서드 우선순위가 더 높다. 즉, 자식 클래스의 메서드가 실행된다.
+      - 이처럼 자식 클래스안에 부모 클래스의 메서드를 재정의해서 새로운 기능으로 대체하는 것을 메서드 오버라이딩이라고 부른다.
+      - average 함수처럼 메서드 이름은 동일하지만 시그니처가 다른 메서드를 메서드 오버로딩이라고 부른다.
+  - 데이터 관점의 상속
+    - 데이터 관점에서 상속은 자식 클래스의 인스턴스 안에 부모 클래스의 인스턴스를 포함하는 것
+  - 행동 관점의 상속
+    - 부모 클래스의 일부 메서드를 자식 클래스의 메서드로 포함시키는 것을 의미하며 일반적으로 부모의 모든 public 메서드는 자식 메서드에 포함된다.
+    - 실제로 자식 클래스 코드에 부모 클래스의 코드가 합치거나 복사하는 작업이 수행되는 것은 아니다. 런타임에서 자식 클래스에 정의되지 않은 메서드가 호출되면 부모 클래스 안에서 탐색하기 때문이다.
+    - 아래는 Lecture 인스턴스를 2개 생성한 후의 메모리 상태를 개념적으로 표현한 것이다. 각 객체는 class라는 포인터를 가지며, 이 포인터로 자신의 클래스 정보에 접근할 수 있다. 또한 parent 이름의 포인터로 상속 계층에 따라 부모 클래스의 정의로 이동하는 것이 가능하다.
+    ![클래스와 인스턴스의 관계](images/자식부모개념적인관계.png)
+    - 아래는 GradeLecture 인스턴스를 생성했을 떄의 메모리 구조다. 이 그림은 개념적인 그림으로 구체적인 구현과 메모리 구조는 언어나 플랫폼에 따라 다르다.
+    ![인스턴스의 메모리 구조](images/자식부모_인스턴스_메모리구조.png)
