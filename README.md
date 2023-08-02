@@ -1260,3 +1260,78 @@
 - self 대 super
   - super는 이 클래스의 부모 클래스에서부터 메서드 탐색을 시작하세요 라는 뜻이다.
   - self가 실행할 메서드를 탐색할 위치를 동적으로 결정하는데 비해 super는 항상 해당 클래스의 부모 클래스에서부터 메서드 탐색을 시작한다. 즉 self는 메서드 탐색을 동적으로 결정해야 하지만 super는 컴파일 시점에 미리 결정해 놓을 수 있다.
+
+### 12.5 상속 대 위임
+
+- 다형성은 self 참조가 가리키는 객체에게 메시지를 전달하는 특성을 기반으로 한다. 동일한 메시지를 전송하더라도 self 참조가 가리키는 객체의 클래스가 무엇이냐에 따라 문맥이 달라진다.
+- 포워딩과 위임
+
+```ruby
+class Lecture
+  def initialize(name, scores)
+    @name = name
+    @scores = scores
+  end
+
+  def stats(this)
+    "Evaluation Method: #{this.getEvaluationMethod()}"
+  end
+
+  def getEvaluationMethod()
+    "Pass or Fail"
+  end
+
+class GradeLecture
+  def initialize(name, scores)
+    @name = name
+    @scores = scores
+  end
+
+  def stats(this)
+    @Parent.stats(this) // self 참조를 부모에게 전달
+  end
+
+  def getEvaluationMethod()
+    "Grade"
+  end
+```
+
+- GradeLecture는 stats 메서드를 직접 처리하지 않고 부모에게 요청한다. 이처럼 self 참조를 인자로 전달해 다른 객체의 메서드를 실행하는 것을 위임이라고 부르고, self 참조 없이 기능을 대신 수행해라 하는 것을 포워딩이라고 한다.
+- 클래스 기반의 OOP 언어들이 self 참조를 자동으로 전달하는 것처럼, 프로토타입 기반의 OOP 언어들은 위임을 통해 객체 사이의 self 참조를 자동으로 전달한다.
+
+```js
+  function Lecture(name, scores) {
+    this.name = name;
+    this.scores = scores;
+  }
+
+  Lecture.prototype.stats = function() {
+    return "Evaluation Method: " +  this.getEvaluationMethod()
+  }
+
+  Lecture.prototype.getEvaluationMethod = function() {
+    return "Pass or Fail"
+  }
+
+  function GradeLecture(name, scores) {
+    this.name = name;
+    this.scores = scores;
+  }
+
+  // prototype 설정을 통해 GradeLecture 객체들이 Lecture에 정의된 모든 속성과 함수에 접근이 가능하다.
+  GradeLecture.prototype = new Lecture();
+
+  GradeLecture.prototype.constructor = GradeLecture;
+
+  GradeLecture.prototype.getEvaluationMethod = function() {
+    return "Grade"
+  }
+
+  // 호출 코드
+  const gradeLecture = new GradeLecture("OOP", [1, 2, 3]);
+  gradeLecture.stats();
+```
+
+- 자바스크립트로 getEvaluationMethod가 실행될 때, 상속과 마찬가지로 self 참조가 가리키는 현재 객체에서부터 다시 메서드 탐색을 시작한다.
+- 동적 메서드 탐색은, 클래스 기반의 언어인 경우 상속을 통해 위임을 처리하고, 자바스크립트는 프로토타입 체인을 통해 메시지에 대한 위임을 처리한다. 자바스크립트는 클래스가 존재하지 않기 때문에 객체들 사이의 메시지 위임을 통해 다형성을 구현한다. 이건 OOP에서 클래스가 필수 요소가 아니라는 사실을 알 수 있고, 상속 이외의 방법으로도 다형성을 구현할 수 있다.
+- 대부분의 OOP 언어들이 클래스에 기반하고 있지만, 앞의 프로토타입 언어처럼 위임을 통해 객체 수준에서 상속을 구현하는 언어도 있다는 것을 기억하자. 중요한 것은 둘 다, 기본개념과 메커니즘을 공유한다는 점이고 다형성과, 상속, 객체지향을 바라보는 시각이 달라지길 바란다.
