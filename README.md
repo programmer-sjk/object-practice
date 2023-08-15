@@ -975,7 +975,7 @@
   - Movie를 컴파일 하기 위해 `DiscountPolicy` 클래스가 필요하다. 문제는 `DiscountPolicy`가 포함된 패키지 안에 `AmountDiscountPolicy, PercentDiscountPolicy` 클래스가 포함돼 있다는 것이다.
   - 컴파일 측면에서는 `DiscountPolicy`가 포함된 패키지 안의 어떤 클래스가 수정되더라도 패키지 전체가 재배포 되어야 한다. 이로 인해 패키지에 의존하는 Movie 클래스가 포함된 패키지 역시 재컴파일 되야 한다. 결과적으로 불필요한 클래스를 같은 패키지에 두는 것은 전체적인 빌드 시간을 상승시킨다.
   - 따라서 추상화를 클라이언트가 속한 패키지에 포함시켜야 한다. 그리고 재사용될 필요가 없는 클래스들`(AmountDiscountPolicy, PercentDiscountPolicy)`은 별도의 패키지에 모아야 하는데, 마틴 파울러는 이를 SEPARATED INTERFACE 패턴이라 부른다.
-  ![역전된 의존성 구조](역전된의존성구조.png)
+  ![역전된 의존성 구조](images/역전된의존성구조.png)
   - Movie와 추상 클래스인 `DiscountPolicy`를 하나의 패키지로 모으는 것은 Movie를 특정한 컨텍스트로부터 완벽하게 독립시킨다. Movie를 다른 컨텍스트에서 재사용하기 위해서는 Moive와 `DiscountPolicy`가 포함된 패키지만 재사용하면 된다.
 - 전통적인 패러다임에서 상위 모듈이 하위 모듈에 의존했다면 객체지향 패러다임에선 상위 수준의 모듈과 하위 수준의 모듈이 모두 추상화에 의존한다. 훌륭한 객체지향 설계를 위해서는 의존성을 역전시켜야 한다.
 
