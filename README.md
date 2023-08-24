@@ -1458,9 +1458,9 @@ public class Movie {
 
   - 위 그림에는 다음과 같이 다양한 종류의 캡슐화가 공존한다.
     - **데이터 캡슐화:** movie의 title은 private이기 때문에 외부에서 직접 접근할 수 없다. 클래스는 내부에 관리하는 데이터를 캡슐화한다.
-    - **메서드 캡슐화:** DiscountPolicy 클래스의 getDiscountAmount 메서드는 protected다. 클래스 외부에서 이 메서드에 직접 접근할 수 없고 클래스 내부와 서브 클래스에만 접근 가능하다.
-    - **객체 캡슐화:** Movie 클래스의 DiscountPolicy 타입의 인스턴스 변수 discountPolicy를 포함한다. 이 변수는 private이기 때문에 Movie와 DiscountPolicy 사이의 관계를 변경해도 외부에는 영향을 미치지 않는다. 눈치가 빠르다면 객체 캡슐화가 합성을 의미하는 것을 눈치챘을 것이다.
-    - **서브타입 캡슐화:** Movie는 DiscountPolicy는 알지만 AmountDiscountPolicy와 PercentDiscountPolicy에 대해서는 알지 못한다. 그러나 실행 시점에서는 이 클래스의 인스턴스 들과 협력할 수 있다. 서브타입 캡슐화가 다형성의 기반이 된다는 것을 알 수 있다.
+    - **메서드 캡슐화:** **`DiscountPolicy`** 클래스의 getDiscountAmount 메서드는 protected다. 클래스 외부에서 이 메서드에 직접 접근할 수 없고 클래스 내부와 서브 클래스에만 접근 가능하다.
+    - **객체 캡슐화:** Movie 클래스의 **`DiscountPolicy`** 타입의 인스턴스 변수 **`discountPolicy`**를 포함한다. 이 변수는 private이기 때문에 Movie와 DiscountPolicy 사이의 관계를 변경해도 외부에는 영향을 미치지 않는다. 눈치가 빠르다면 객체 캡슐화가 합성을 의미하는 것을 눈치챘을 것이다.
+    - **서브타입 캡슐화:** Movie는 DiscountPolicy는 알지만 **`AmountDiscountPolicy와 PercentDiscountPolicy에`** 대해서는 알지 못한다. 그러나 실행 시점에서는 이 클래스의 인스턴스 들과 협력할 수 있다. 서브타입 캡슐화가 다형성의 기반이 된다는 것을 알 수 있다.
 
 ### 14.3 일관성 있는 기본 정책 구현하기
 
