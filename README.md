@@ -1556,3 +1556,58 @@ public void Reschedule(Scheduler schedule)
 - 타입을 구현할 수 있는 방법이 단 한가지만 존재하는 경우에는 타입과 클래스를 동일하게 취급해도 무방하다. 반대로 타입을 구현할 수 있는 방법이 다양해지면 클래스와 타입은 갈라지기 시작한다.
 - 어떤 클래스의 퍼블릭 인터페이스는 동일하지만 다른 방식으로 구현해야 하는 객체가 필요하다고 가정하자. 다시 말해 구현은 다르지만 동일한 타입으로 분류되는 객체가 필요한 것이다. 이를 할 수 있는 가장 간단한 방법은 상속을 이용하는 것이다.
 - 앞에서 살펴본 것 처럼 상속은 자식 클래스를 부모 클래스에 강하게 결합시키기 때문에 추상 클래스를 상속 받거나 인터페이스를 구현하는 방법을 사용하길 바란다.
+
+### 인터페이스를 이용한 타입 계층 구현
+
+- 상속으로 인한 결합도 문제를 피하고 다중 상속이라는 구현 제약도 해결할 수 있는 방법은 클래스가 아닌 인터페이스를 사용하는 것이다.
+
+  ```java
+    public interface GameObject {
+      String getName();
+    }
+
+    // 화면 표시라는 별도의 타입
+    // Displayable 타입의 모든 인스턴스는 GameObject 타입의 인스턴스 집합에도 포함된다. 이처럼 인터페이스가 다른
+    // 인터페이스를 확장하도록 만들면 슈퍼 타입과 서브 타입간의 타입 계층을 구성할 수 있다.
+    public interface Displayable extends GameObject {
+      Point getPosition();
+      void update(Graphics graphics);
+    }
+
+    // 충돌로 인해 제약받는 타입
+    public interface Collidable extends Displayable {
+      boolean collieWith(Collidable other)
+    }
+
+    /***** 구현 클래스 *****/
+    public class Player implements Collidable {
+      @Override
+      public String getName() {}
+
+      @Override
+      public String collieWith() {}
+
+      @Override
+      public String getPosition() {}
+
+      @Override
+      public String update() {}
+    }
+
+    public class Monster implements Collidable {
+      @Override
+      public String getName() {}
+
+      @Override
+      public String collieWith() {}
+
+      @Override
+      public String getPosition() {}
+
+      @Override
+      public String update() {}
+    }
+  ```
+
+- Player, Monster 클래스는 다른 클래스지만 동일한 Collidable 인터페이스를 구현하고 있기 때문에 동일한 메시지에 응답할 수 있다. 따라서 다른 클래스지만 타입은 동일하다. 중요한 것은 인터페이스를 이용해 타입 계층을 구현할 수 있다는 사실이다.
+- 객체의 클래스는 객체의 구현을 정의한다. 클래스는 상태와 오퍼레이션 구현 방법을 정의하고 객체의 타입은 인터페이스만을 정의하는 것으로 객체가 반응할 수 있는 오퍼레이션의 집합을 정의한다. 하나의 객체가 여러 타입을 가질 수도 있고 다른 클래스들이 동일한 타입을 가질 수 있다. 즉 객체의 구현은 다를지라도 인터페이스는 같을 수 있다.
