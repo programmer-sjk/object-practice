@@ -1611,3 +1611,91 @@ public void Reschedule(Scheduler schedule)
 
 - Player, Monster 클래스는 다른 클래스지만 동일한 Collidable 인터페이스를 구현하고 있기 때문에 동일한 메시지에 응답할 수 있다. 따라서 다른 클래스지만 타입은 동일하다. 중요한 것은 인터페이스를 이용해 타입 계층을 구현할 수 있다는 사실이다.
 - 객체의 클래스는 객체의 구현을 정의한다. 클래스는 상태와 오퍼레이션 구현 방법을 정의하고 객체의 타입은 인터페이스만을 정의하는 것으로 객체가 반응할 수 있는 오퍼레이션의 집합을 정의한다. 하나의 객체가 여러 타입을 가질 수도 있고 다른 클래스들이 동일한 타입을 가질 수 있다. 즉 객체의 구현은 다를지라도 인터페이스는 같을 수 있다.
+
+### 추상 클래스를 이용한 타입 계층 구현
+
+- 클래스 상속을 이용해 구현을 공유하면서도 결합도의 부작용을 피하는 방법이 있는데 바로 추상 클래스를 사용하는 방법이다.
+  영화 예매 시스템엫서 할인 정책을 구현하기 위한 DiscountPolicy를 떠올려보자.
+
+```java
+  public abstract class DiscountPolicy {
+    private List<DiscountCondition> conditions = new ArrayList()<>;
+    abstract protected Money getDiscountAmount(Screening screening);
+  }
+
+  public class AmountDiscountPolicy extends DiscountPolicy {
+    @Override
+    protected Money getDiscountAmount(Screening screening) {
+      return discountAmount;
+    }
+  }
+
+  public class PercentDiscountPolicy extends DiscountPolicy {
+    @Override
+    protected Money getDiscountAmount(Screening screening) {
+      return screening.getMovieFee().times(percent);
+    }
+  }
+```
+
+- 구체 클래스로 상속하는 방법과 추상 클래스로 타입을 정의해서 상속받는 방법에는 두 가지 차이가 있다. 바로 추상화의 정도와 상속을 사용하는 의도이다.
+  - 첫 번째 구체 클래스 상속은 부모의 내부 구현이 바뀌면 자식 클래스도 함께 변경될 가능성이 높다. 반대로 추상 클래스의 경우 내부 구현이 아닌 추상 메서드의 시그니처에만 의존한다. 자식 클래스들은 부모인 DiscountPolicy가 어떻게 구현돼 있는지 알 필요가 없다.
+  - 한 가지 조언은 모든 구체 클래스의 부모 클래스를 항상 추상 클래스로 만들기 위해 노력하라는 것이다. 의존하는 대상이 추상적일 수록 결합도는 낮아지고 변경에 의한 영향이 줄어즌다. DiscountPolicy의 자식들은 추상 메서드의 명세가 변경되지 않는 한 영향을 받지 않는다.
+  - 두 번째는 상속을 사용하는 의도다. phone은 상속을 염두에 두고 설계된 것이 아니라 코드 재사용을 위한 트릭에 가깝지만 추상 클래스인 DiscountPolicy의 유일한 목적은 자식 클래스를 추가하는 것이다. 추상 메서드만 제공함으로써 상속 계층을 쉽게 확장할 수 있게 하고 부작용을 방지할 수 있다.
+
+### 추상 클래스와 인터페이스 결합하기
+
+- 인터페이스와 추상 클래스를 함께 사용하는 방법은 추상 클래스만 사용하는 방법에 비해 두 가지 장점이 있다.
+  - 다양한 구현 방법이 필요한 경우, 새로운 추상 클래스를 추가해 쉽게 해결이 가능하다.
+  - 이미 부모 클래스가 존재하는 클래스라도, 인터페이스를 추가해 새로운 타입으로 확장할 수 있다. 만약 인터페이스 없이 추상 클래스로 구현돼 있는 경우 상속 계층을 다시 조정해야만 한다.
+- 설계가 상속 계층에 얽매이지 않는 타입 계층을 요구하면 인터페이스로 타입을 정의해라. 추상 클래스로 기본 구현을 제공해서 중복 코드를 제거하라. 이런 복잡성이 필요없다면 타입을 정의하기 위해 추상클래스나 인터페이스 둘 중 하나만 사용하라.
+
+### 덕 타이핑 사용하기
+
+- 덕 타이핑은 주로 동적 타입 언어에서 사용하는 방법으로 덕 테스트를 프로그래밍 언어에 적용한 것이다.
+- 덕 테스트는 어떤 대상의 행동이 오리와 같다면 그것을 오리라는 타입으로 취급해도 무방하다는 말이다. 따라서 객체가 어떤 인터페이스에 정의된 행동을 수행할 수 있다면 그 객체를 해당 타입으로 분류해도 문제가 없다.
+- 안타깝게도 자바를 비롯한 대부분의 정적 타입 언어는 덕 타이핑을 지원하지 않는다.
+
+```java
+  public interface Employee() {
+    Money calculatePay(double taxRate);
+  }
+
+  public class SalaryEmployee() {
+    public calculatePay(double taxRate) {
+      return basePay.minus(basePay.times(taxRate));
+    }
+  }
+
+    public class HourlyEmployee() {
+    public calculatePay(double taxRate) {
+      return basePay.times(timeCard).minus(basePay);
+    }
+  }
+```
+
+- 위 코드에서 SalaryEmployee, HourlyEmployee는 calculatePay 메서드를 포함하지만 자바 같은 정적타입 언어에서는 코드 상의 타입이 동일하게 선언되어야 동일한 타입으로 취급된다. 따라서 아래와 같이 calculate 메서드의 첫 번째 인자로 SalaryEmployee, HourlyEmployee를 전달한다면 코드는 컴파일 오류가 발생한다.
+
+```java
+public Money calculatePay(Employee employee, double taxRate) {
+  return employee.calculatePay(taxRate);
+}
+
+calculate(new SalaryEmployee(), 0.01); // 컴파일 에러
+calculate(new HourlyEmployee(), 0.01); // 컴파일 에러
+```
+
+- 위 코드가 동작하려면 두 클래스가 Employee 인터페이스를 명시적으로 구현하게 해야 한다. 이처럼 정적 타입의 언어에서는 인터페이스만으로 타입을 추측하는게 불가능하며 모든 요소와 타입이 명시적으로 기술돼 있어야 한다. 반대로 런타임에 타입을 결정하는 동적 타입 언어는 동일한 시그니처를 가진 메서드를 구현하고 있기 떄문에 동일한 타입으로 간주될 수 있다.
+- 이것이 덕 타이핑이다. calculatePay(taxRate) 라는 행동을 수행할 수 있으면 이 객체를 Employee 라고 부를 수 있는 것이다. 마치 꽥꽥거리는 모든 것을 오리라고 부르는 것처럼 말이다.
+- 덕 타이핑을 사용하면 메시지 수준으로 결합도를 낮출 수 있기 때문에 유연한 설계를 얻을 수 있다. 하지만 컴파일 시점에 발견할 수 있는 오류를 실행 시점으로 미루기 때문에 코드의 안정성을 약화시킬 수 있다는 점에 주의하라.
+
+## 부록 C. 동적인 협력, 정적인 코드
+
+- 객체는 동적이고 프로그램은 정적이다. 객체는 시간에 따라 다른 객체와 협력하며 변화한다. 프로그램은 고정된 텍스트라는 형식 안에 있으면서도 객체의 모든 변화 가능성을 담아야 한다. 프로그램 실행구조를 표현하는 움직인 모델을 동적 모델, 코드의 구조를 담는 고정된 모델을 정적 모델이라고 부른다.
+- 두 가지 모델 중에 우선해야 할 것은 동적 모델이다. 정적 모델은 동적 모델에 의해 주도되어야 하고 프로그램 코드 안에 담아지는 정적 모델은 객체 사이의 협력에 기반해야 한다.
+
+### 도메인 모델과 구현
+
+- 도메인이란 사용자가 프로그램을 사용하는 대상 영역을 가리킨다. 객체지향 분석 설계에서 제안하는 지침 중 하나는 소프트웨어의 도메인에 대해 고민하고 도메인 모델을 기반으로 SW를 구축하라는 것이다. 이 때 도메인 모델을 작성하는 것은 목표가 아니라 출밤점이다. SW를 만들기 위해 하는 모든 목적은 동작하는 SW를 만드는 것이다.
+- 불행은 도메인 안의 개념이 제공하는 틀에 맞춰서 SW를 구축해야 한다고 생각할 때 시작된다. 중요한 것은 객체들의 협력을 지원하는 코드 구조를 만드는 것이다. 도메인의 개념을 충실히 따르는 코드가 목적이 아니다.
+- 코드는 도메인의 개념이 아닌, 객체의 행동과 변경에 영향을 받는다. 분석, 설계, 구현 단계에서 세부적인 내용은 다를 수 있지만 설계의 초점은 동일하다. 모든 단계에 걸쳐 행동과 변경에 초점을 맞추라는 것이다.
